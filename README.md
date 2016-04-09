@@ -38,3 +38,15 @@ A dummy application for a bank; should provide various functions of a retail ban
 * A customer can transfer between their accounts
 * Change **Maxi-Savings accounts** to have an interest rate of 5% assuming no withdrawals in the past 10 days otherwise 0.1%
 * Interest rates should accrue daily (incl. weekends), rates above are per-annum
+
+## Feature Rejection
+
+Customer transactions between accounts has been put on hold as currently there are no transaction types and all transactions are per account.
+
+## Changes
+
+* Maxi-Savings interest rates have been updated as requested.
+* Interest rates are accrued daily, with consideration for leap year.
+* Transactions are now for a specified date rather than "now", and must be added in chronological order.
+* Withdrawal amounts must not exceed the current account balance.
+* Statements are per a given date and include bot transaction dates and interest earnings. 

@@ -1,5 +1,6 @@
 package com.abc;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,53 +18,90 @@ public class Account {
         this.transactions = new ArrayList<Transaction>();
     }
 
-    public void deposit(double amount) {
+    public boolean invalidDate(LocalDate date) {
+        if (transactions.isEmpty())
+            return false;
+        Transaction t = transactions.get(transactions.size() - 1);
+        return date.compareTo(t.getTransactionDate()) < 0;
+    }
+
+    public void deposit(double amount, LocalDate date) {
         if (amount <= 0) {
             throw new IllegalArgumentException("amount must be greater than zero");
+        } else if (invalidDate(date)) {
+            throw new IllegalArgumentException("date can not be less then previous transaction date");
         } else {
-            transactions.add(new Transaction(amount));
+            transactions.add(new Transaction(amount, date));
         }
     }
 
-public void withdraw(double amount) {
-    if (amount <= 0) {
-        throw new IllegalArgumentException("amount must be greater than zero");
-    } else {
-        transactions.add(new Transaction(-amount));
+    public void withdraw(double amount, LocalDate date) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("amount must be greater than zero");
+        } else if (invalidDate(date)) {
+            throw new IllegalArgumentException("date can not be less then previous transaction date");
+        } else if (amount > balance(date)) {
+            throw new IllegalArgumentException("withdrawal amount exceeds current balance");
+        } else {
+            transactions.add(new Transaction(-amount, date));
+        }
     }
-}
 
-    public double interestEarned() {
-        double amount = sumTransactions();
-        switch(accountType){
+    public double dailyEarnings(double balance, LocalDate date, int withdrawalCountDown) {
+        int lengthOfYear = date.lengthOfYear();
+        switch (accountType) {
             case SAVINGS:
-                if (amount <= 1000)
-                    return amount * 0.001;
+                if (balance <= 1000)
+                    return balance * 0.001 / lengthOfYear;
                 else
-                    return 1 + (amount-1000) * 0.002;
-//            case SUPER_SAVINGS:
-//                if (amount <= 4000)
-//                    return 20;
+                    return (1 + (balance - 1000) * 0.002) / lengthOfYear;
             case MAXI_SAVINGS:
-                if (amount <= 1000)
-                    return amount * 0.02;
-                if (amount <= 2000)
-                    return 20 + (amount-1000) * 0.05;
-                return 70 + (amount-2000) * 0.1;
+                if (withdrawalCountDown > 0) {
+                    return balance * 0.001 / lengthOfYear;
+                }
+                return balance * 0.05 / lengthOfYear;
             default:
-                return amount * 0.001;
+                return balance * 0.001 / lengthOfYear;
         }
     }
 
-    public double sumTransactions() {
-       return checkIfTransactionsExist(true);
+    public double balance(LocalDate date) {
+        if (transactions.isEmpty())
+            return 0.0;
+        double amount = 0.0;
+        int pos = 0;
+        LocalDate currentDate = transactions.get(0).getTransactionDate();
+        int withdrawalCountDown = 0;
+        while (currentDate.compareTo(date) <= 0) {
+            amount += dailyEarnings(amount, currentDate, withdrawalCountDown);
+            while (pos < transactions.size() &&
+                    currentDate.compareTo(transactions.get(pos).getTransactionDate()) == 0) {
+                double transactionAmount = transactions.get(pos).amount;
+                if (transactionAmount < 0) {
+                    withdrawalCountDown = 10;
+                }
+                amount += transactionAmount;
+                pos += 1;
+            }
+            currentDate = currentDate.plusDays(1);
+            if (withdrawalCountDown > 0) {
+                withdrawalCountDown -= 1;
+            }
+        }
+        return amount;
     }
 
-    private double checkIfTransactionsExist(boolean checkAll) {
+    public double sumTransactions(LocalDate date) {
         double amount = 0.0;
-        for (Transaction t: transactions)
-            amount += t.amount;
+        for (Transaction t : transactions)
+            if (date.compareTo(t.getTransactionDate()) >= 0) {
+                amount += t.amount;
+            }
         return amount;
+    }
+
+    public double interestEarned(LocalDate date) {
+        return balance(date) - sumTransactions(date);
     }
 
     public int getAccountType() {

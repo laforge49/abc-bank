@@ -1,5 +1,6 @@
 package com.abc;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,13 +28,14 @@ public class Bank {
         return number + " " + (number == 1 ? word : word + "s");
     }
 
-    public double totalInterestPaid() {
+    public double totalInterestPaid(LocalDate date) {
         double total = 0;
         for(Customer c: customers)
-            total += c.totalInterestEarned();
+            total += c.totalInterestEarned(date);
         return total;
     }
 
+    /* non-functional and unused
     public String getFirstCustomer() {
         try {
             customers = null;
@@ -43,4 +45,5 @@ public class Bank {
             return "Error";
         }
     }
+    */
 }
